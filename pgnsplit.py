@@ -51,6 +51,11 @@ def process(rargs):
         infd = sys.stdin
 
     fstats = []
+
+    limit = -1
+    if rargs.limit:
+        limit = rargs.limit
+
     
     # sizeFiles is always --seq...
     if rargs.sizeFiles is not None:
@@ -58,7 +63,7 @@ def process(rargs):
         ngames = 0
         tot_ngames = 0                
         n = 0
-        
+
         # Kickstart on F.0000.pgn:
         fd = open(mkfn(n),"w")
 
@@ -78,6 +83,9 @@ def process(rargs):
             ngames += 1
             tot_ngames += 1                              
 
+            if limit > 0 and tot_ngames >= limit:
+                break
+            
         # Clean up after last file:
         fstats.append({"count":ngames})            
         fd.close()
@@ -98,6 +106,7 @@ def process(rargs):
 
         if rargs.seqCount or rargs.seq:
             gcnt = 0
+            tot_ngames = 0
             ee = 0
 
             # Kickstart on F.0000.pgn:
@@ -115,6 +124,10 @@ def process(rargs):
                 if qq == 0:
                     break
                 gcnt += 1
+                tot_ngames += 1
+            
+                if limit > 0 and tot_ngames >= limit:
+                    break                
 
             fstats.append({"count":gcnt})
             fd.close()
@@ -122,7 +135,8 @@ def process(rargs):
 
         else:  # interlace
             ee = 0
-
+            tot_ngames = 0
+            
             # Yes, this will open up a bunch of files in advan 
             for n in range(0,nfiles):
                 fds.append(open(mkfn(n),"w"))
@@ -140,6 +154,10 @@ def process(rargs):
                 
                 ee += 1
 
+                tot_ngames += 1
+            
+                if limit > 0 and tot_ngames >= limit:
+                    break                                
                 
             for n in range(0,len(fds)):
                 fds[n].close()
@@ -220,6 +238,11 @@ That file is 1.3GB compressed and 5.7GB uncompressed so
                         help="""If set, this will be used as an estimated
                         count of games and games will fill up each new file in order instead of interlacing.  If more games are encountered, they will be placed into the last file.""")
 
+    parser.add_argument('--limit',
+                        metavar='n',
+                        type=int,
+                        help="""Limit total output of games to n in either numFiles of sizeFiles mode.  Useful for extracting a small number of the first games from the big PGN input.""")
+    
     parser.add_argument('--pathPrefix',
                         default='F',
                         metavar='path',                        
@@ -238,7 +261,7 @@ That file is 1.3GB compressed and 5.7GB uncompressed so
     if rargs.seq and rargs.seqCount:
         error("choose either --seq or --seqCount")
 
-    if rargs.sizeFiles < 10000:
+    if rargs.sizeFiles and rargs.sizeFiles < 10000:
         error("--sizeFiles must be >10000")                
 
     process(rargs)
