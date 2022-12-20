@@ -43,7 +43,7 @@ def process(rargs):
     ONE_GAME_SIZE = 800  # Based on casual observations...
 
     def mkfn(n):
-        return "%s.%04d.pgn" % (rargs.pathPrefix,n)
+        return "%s.%d.pgn" % (rargs.pathPrefix,n)
     
     if rargs.fname is not None:
         infd = open(rargs.fname, "r")
@@ -162,7 +162,7 @@ def process(rargs):
             for n in range(0,len(fds)):
                 fds[n].close()
 
-    if rargs.stats is not None:
+    if True == rargs.stats:
         print(json.dumps({"games":fstats}))
 
         
